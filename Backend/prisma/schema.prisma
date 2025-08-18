@@ -1,0 +1,182 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int     @id @default(autoincrement()) // -> Primary Key med auto optælling
+  name         String  @default("Ikke navngivet")
+  email        String  @unique // -> Unik værdi
+  password     String
+  description  String? @db.Text // -> Lang tekst
+  image        String
+  refreshToken String
+  isActive     Boolean @default(true) // -> Bool med default true
+
+  favorites Favorite[]
+  reviews   Review[]
+
+  @@map("users") // -> Navn på tabel
+}
+
+model Category {
+  id          Int      @id @default(autoincrement())
+  title       String
+  slug        String   @default("untitled")
+  description String   @db.Text
+  isActive    Boolean
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  categoryProducts CategoryProduct[]
+
+  @@map("categories")
+}
+
+model Product {
+  id                Int      @id @default(autoincrement())
+  title             String
+  slug              String   @default("untitled")
+  description       String   @db.Text
+  imageUrl          String
+  procedure         String   @db.Text
+  durationInMinutes Int
+  amount            Int
+  price             Float
+  isActive          Boolean
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  categoryProducts   CategoryProduct[]
+  productIngredients ProductIngredient[]
+
+  favorites Favorite[]
+  reviews   Review[]
+
+  @@map("products")
+}
+
+model CategoryProduct {
+  id         Int @id @default(autoincrement())
+  categoryId Int
+  productId  Int
+
+  categories Category @relation(fields: [categoryId], references: [id])
+  products   Product  @relation(fields: [productId], references: [id])
+
+  @@map("categoryProducts")
+}
+
+model Review {
+  id        Int      @id @default(autoincrement())
+  title     String   @db.Text // -> Lang tekst
+  comment   String   @db.Text // -> Lang tekst
+  numStars  Int
+  productId Int
+  userId    Int
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now()) // -> Datotid
+  updatedAt DateTime @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@map("reviews")
+}
+
+model Ingredient {
+  id    Int    @id @default(autoincrement())
+  title String
+
+  productIngredients ProductIngredient[]
+
+  @@map("ingredients")
+}
+
+model Unit {
+  id           Int    @id @default(autoincrement())
+  name         String
+  abbreviation String
+
+  productIngredients ProductIngredient[]
+
+  @@map("units")
+}
+
+model ProductIngredient {
+  id           Int @id @default(autoincrement())
+  productId    Int
+  ingredientId Int
+  unitId       Int
+  amount       Int
+  orderNum     Int
+
+  products    Product    @relation(fields: [productId], references: [id])
+  ingredients Ingredient @relation(fields: [ingredientId], references: [id])
+  units       Unit       @relation(fields: [unitId], references: [id])
+
+  @@map("productIngredients")
+}
+
+model Favorite {
+  id        Int @id @default(autoincrement())
+  userId    Int
+  productId Int
+
+  user    User    @relation(fields: [userId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@unique([userId, productId]) // <-- vigtig
+  @@map("favorites")
+}
+
+model News {
+  id        Int      @id @default(autoincrement())
+  title     String
+  slug      String
+  teaser    String
+  content   String
+  imageUrl  String
+  isActive  Boolean
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("news")
+}
+
+model Message {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String
+  message   String
+  createdAt DateTime @default(now())
+
+  @@map("messages")
+}
+
+model NewsletterSubscriber {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  createdAt DateTime @default(now())
+
+  @@map("newsletterSubscribers")
+}
+
+model Slide {
+  id       Int    @id @default(autoincrement())
+  name     String
+  imageUrl String
+  orderNum Int
+
+  @@map("slides")
+}
